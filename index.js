@@ -17,6 +17,51 @@ app.use(cors());
 require('./db/config')
 
 
+
+class JSSClass {
+  constructor() {
+    this.className = 'JSS';
+    this.subjects = ['Mathematics', 'English Studies', 'Basic Science', 'Basic Technology', 'Civic Education', 
+                      'Agricultural Science', 'Computer Science', 'Physical Education', 'Business Studies', 'Social Studies',
+                      'Christain Religious Studies', 'Creative and Cultural Art', 'Home Economics', 'Literature-in-English', 'History', 'Yoruba', 'French'
+                    ];
+  }
+}
+
+class ArtClass {
+  constructor() {
+    this.className = 'Art';
+    this.subjects = ['Mathematics', 'English Studies', 'Civic Education', 'Economics', 'Biology', 'Government', 'Fine Arts',
+                     'Literature-in-English', 'History', 'Christain Religious Studies','Yoruba', 'French'
+                    ];
+  }
+}
+
+class ScienceClass {
+  constructor() {
+    this.className = 'Science';
+    this.subjects = ['Mathematics',  'English Studies', 'Civic Education', 'Economics', 'Physics', 'Chemistry', 'Biology', 
+                      'Agricultural Science', 'Geography', 'Further Mathematics', 'Computer Science', 'Yoruba'
+                    ];
+  }
+}
+
+class CommercialClass {
+  constructor() {
+    this.className = 'Commercial';
+    this.subjects = ['Mathematics',  'English Studies', 'Civic Education', 'Economics','Biology', 'Commerce', 'Accounting', 'Business Studies', 
+                     'Marketing', 'Food and Nutrition'];
+  }
+}
+
+const classesArray = [
+  new JSSClass(),
+  new ArtClass(),
+  new ScienceClass(),
+  new CommercialClass(),
+];
+
+
 app.post('/api/register', async (req, res) => {
   try {
     const registration = new Registration(req.body);
@@ -75,6 +120,20 @@ app.post('/api/set-terms', async (req, res) => {
   } catch (error) {
     console.error('Error:', error);
     res.status(500).json({ success: false, message: 'Error setting term' });
+  }
+});
+
+
+app.get('/api/getSubjects/:className', (req, res) => {
+  const className = req.params.className;
+
+  // Find the class by name
+  const targetClass = classesArray.find((cls) => cls.className.toLowerCase() === className.toLowerCase());
+
+  if (targetClass) {
+    res.json({ success: true, subjects: targetClass.subjects });
+  } else {
+    res.status(404).json({ success: false, message: 'Class not found' });
   }
 });
 
@@ -173,10 +232,22 @@ app.get('/api/classteachers/:classAssigned', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-app.get('/api/departmentteachers/:departmentAssinged', async (req, res) => {
+app.get('/api/departmentteachers/:department', async (req, res) => {
+  const department = req.params.department
+
   try {
-    const departmentAssinged = req.params.departmentAssinged;
-    const teacher = await Teacher.find({ departmentAssinged: departmentAssinged });
+   
+    let query = {};
+    if (department === 'Science' || department === 'Art') {
+      query = { $or: [{ departmentAssinged: 'Sss General' }, { departmentAssinged: department }] };
+    } else {
+      query = { departmentAssinged: department };
+    }
+
+    console.log('Constructed Query:', query);
+   
+    const teacher = await Teacher.find(query);
+   
 
     if (!teacher) {
       return res.status(404).json({ message: 'Department teachers not found' });
