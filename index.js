@@ -1,11 +1,12 @@
 const express = require('express');
-
+const bcrypt = require('bcrypt');
 const app = express();
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const Schoolfee = require('./db/Schoolfee')
 const Teacher = require('./db/Teacher');
 const SetTerm = require('./db/SetTerm')
+
 const Registration = require('./db/User'); // Import the Registration model
 const port = process.env.PORT || 5000;
 
@@ -23,7 +24,7 @@ class JSSClass {
     this.className = 'JSS';
     this.subjects = ['Mathematics', 'English Studies', 'Basic Science', 'Basic Technology', 'Civic Education', 
                       'Agricultural Science', 'Computer Science', 'Physical Education', 'Business Studies', 'Social Studies',
-                      'Christain Religious Studies', 'Creative and Cultural Art', 'Home Economics', 'Literature-in-English', 'History', 'Yoruba', 'French'
+                      'CRK', 'CCA', 'Home Economics', 'Literature-in-English', 'History', 'Yoruba', 'French'
                     ];
   }
 }
@@ -62,6 +63,28 @@ const classesArray = [
 ];
 
 
+let users = [
+  { email: 'divineblossom999@gmail.com', password: 'admin001' },
+  // Add more users as needed
+];
+
+app.post('/api/adminlogin', (req, res) => {
+  const { email, password } = req.body;
+
+  // Check if the user exists in the array
+  const user = users.find((user) => user.email === email);
+
+  if (user && user.password === password) {
+    // Authentication successful
+    res.status(200).json({ message: 'Login successful' });
+  } else {
+    // Authentication failed
+    res.status(401).json({ message: 'Invalid email or password' });
+  }
+});
+
+
+
 app.post('/api/register', async (req, res) => {
   try {
     const registration = new Registration(req.body);
@@ -86,6 +109,22 @@ app.post('/api/signin', async (req, res) => {
   try {
     const { surname, admission } = req.body;
     const user = await Registration.findOne({ surname, admission });
+
+    if (user) {
+      res.status(200).json({ message: 'Sign-in successful' });
+    } else {
+      res.status(401).json({ message: 'Invalid credentials' });
+    }
+  } catch (error) {
+    console.error('Error during sign-in:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/teacherSignIn', async (req, res) => {
+  try {
+    const { email, teacherId } = req.body;
+    const user = await Teacher.findOne({ email, teacherId });
 
     if (user) {
       res.status(200).json({ message: 'Sign-in successful' });
@@ -170,11 +209,46 @@ app.get('/api/teachers/:name', async (req, res) => {
   }
 });
 
-app.get('/api/student/:surname/:firstname', async (req, res) => {
+app.get('/api/teachers/:email/:teacherId', async (req, res) => {
+  try {
+    const email = req.params.email;
+    const teacherId = req.params.teacherId;
+    const teacher = await Teacher.findOne({ email: email,  teacherId: teacherId});
+
+    if (!teacher) {
+      return res.status(404).json({ message: 'teacher not found' });
+    }
+
+    res.status(200).json(teacher);
+  } catch (error) {
+    console.error('Error fetching teacher by Id:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/getstudents/:surname/:firstname', async (req, res) => {
   try {
     const surname = req.params.surname;
     const firstname = req.params.firstname;
     const student = await Registration.findOne({ surname: surname, firstname: firstname });
+
+    if (!student) {
+      return res.status(404).json({ message: 'student not found' });
+    }
+
+    res.status(200).json(student);
+  } catch (error) {
+    console.error('Error fetching student by Id:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+
+});
+
+app.get('/api/getMyStudents/:class', async (req, res) => {
+  try {
+    const studentClass = req.params.class;
+ 
+    const student = await Registration.find({ class: studentClass });
 
     if (!student) {
       return res.status(404).json({ message: 'student not found' });
@@ -217,6 +291,7 @@ app.get('/api/getTeachers', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 app.get('/api/classteachers/:classAssigned', async (req, res) => {
   try {
     const classAssigned = req.params.classAssigned;
@@ -244,7 +319,7 @@ app.get('/api/departmentteachers/:department', async (req, res) => {
       query = { departmentAssinged: department };
     }
 
-    console.log('Constructed Query:', query);
+  
    
     const teacher = await Teacher.find(query);
    
