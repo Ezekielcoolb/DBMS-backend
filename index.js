@@ -6,6 +6,9 @@ const bodyParser = require('body-parser');
 const Schoolfee = require('./db/Schoolfee')
 const Teacher = require('./db/Teacher');
 const SetTerm = require('./db/SetTerm')
+const Contact = require('./db/Contact')
+const jwt = require('jsonwebtoken')
+const secretKey = 'dbmsc-secret';
 
 const Registration = require('./db/User'); // Import the Registration model
 const port = process.env.PORT || 5000;
@@ -76,7 +79,12 @@ app.post('/api/adminlogin', (req, res) => {
 
   if (user && user.password === password) {
     // Authentication successful
-    res.status(200).json({ message: 'Login successful' });
+
+    // Generate a token with user information
+    const token = jwt.sign({ email: user.email, userId: user.id }, secretKey, { expiresIn: '1h' });
+
+    // Include the token in the response
+    res.status(200).json({ message: 'Login successful', token: token });
   } else {
     // Authentication failed
     res.status(401).json({ message: 'Invalid email or password' });
@@ -111,7 +119,8 @@ app.post('/api/signin', async (req, res) => {
     const user = await Registration.findOne({ surname, admission });
 
     if (user) {
-      res.status(200).json({ message: 'Sign-in successful' });
+      const token = jwt.sign({ email: user.email, userId: user.id }, secretKey, { expiresIn: '1h' });
+      res.status(200).json({ message: 'Login successful', token: token });
     } else {
       res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -127,7 +136,8 @@ app.post('/api/teacherSignIn', async (req, res) => {
     const user = await Teacher.findOne({ email, teacherId });
 
     if (user) {
-      res.status(200).json({ message: 'Sign-in successful' });
+      const token = jwt.sign({ email: user.email, userId: user.id }, secretKey, { expiresIn: '1h' });
+      res.status(200).json({ message: 'Login successful', token: token });
     } else {
       res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -162,6 +172,24 @@ app.post('/api/set-terms', async (req, res) => {
   }
 });
 
+app.post('/api/contact', async (req, res) => {
+  const newContact = new Contact(req.body);
+
+  try {
+    await newContact.save();
+    res.json({ success: true, message: 'contact message sent successfully' });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ success: false, message: 'Error sending contact message' });
+  }
+});
+
+app.post('/api/adminlogout', (req, res) => {
+  // Optionally, you can implement server-side logic for token invalidation or cleanup
+  
+  // Respond with success message
+  res.status(200).json({ message: 'Logout successful' });
+});
 
 app.get('/api/getSubjects/:className', (req, res) => {
   const className = req.params.className;
@@ -335,7 +363,7 @@ app.get('/api/departmentteachers/:department', async (req, res) => {
   }
 });
 
-app.get('/api/teachers/search', async (req, res) => {
+app.get('/api/searchteachers/search', async (req, res) => {
   const { keyword } = req.query;
 
   try {
@@ -351,11 +379,11 @@ app.get('/api/teachers/search', async (req, res) => {
   }
 });
 
-app.get('/api/students/search', async (req, res) => {
+app.get('/api/searchstudents/search', async (req, res) => {
   const { keyword } = req.query;
 
   try {
-    const students = await Registration.find({ name: { $regex: keyword, $options: 'i' } }); // Case-insensitive search
+    const students = await Registration.find({ surname: { $regex: keyword, $options: 'i' } }); // Case-insensitive search
     if (!students) {
       return res.status(404).json({ message: 'students not found' });
     }
@@ -364,6 +392,15 @@ app.get('/api/students/search', async (req, res) => {
   } catch (error) {
     console.error('Error fetching students:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+app.get('/api/getContact', async (req, res) => {
+  try {
+    const contactMessages = await Contact.find();
+    res.json({ success: true, messages: contactMessages });
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ success: false, message: 'Error retrieving contact messages' });
   }
 });
 
@@ -453,6 +490,21 @@ app.put('/api/updateStudent/:surname/:firstname', async (req, res) => {
     res.status(500).json({ success: false, message: 'Error updating student' });
   }
 });
+app.put('/api/updateadminpassword', (req, res) => {
+  const { email, newPassword } = req.body;
+
+  // Check if the user exists in the array
+  const user = users.find((user) => user.email === email);
+
+  if (user) {
+    // Update only the password
+    user.password = newPassword;
+
+    res.status(200).json({ message: 'Password updated successfully' });
+  } else {
+    res.status(404).json({ message: 'User not found' });
+  }
+});
 
 app.put('/api/updateTerm', async (req, res) => {
   try {
@@ -504,6 +556,25 @@ app.delete('/api/deletestudents/:firstname/:surname', async (req, res) => {
     res.status(500).json({ success: false, message: 'Error deleting student' });
   }
 });
+// Add this route to handle DELETE requests for deleting a contact message by ID
+app.delete('/api/deletecontact/:id', async (req, res) => {
+  const contactId = req.params.id;
+
+  try {
+    // Use the Contact model to find and remove the contact message by ID
+    const deletedContact = await Contact.findByIdAndRemove(contactId);
+
+    if (deletedContact) {
+      res.json({ success: true, message: 'Contact message deleted successfully' });
+    } else {
+      res.status(404).json({ success: false, message: 'Contact message not found' });
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ success: false, message: 'Error deleting contact message' });
+  }
+});
+
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

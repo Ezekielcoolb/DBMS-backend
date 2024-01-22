@@ -6,7 +6,7 @@ const registrationSchema = new mongoose.Schema({
   class: String,
   department: String,
   admission: String,
-  birth: Date,
+  birth: String,
   guidiance: String,
   address: String,
   status: String,
