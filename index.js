@@ -11,7 +11,7 @@ const jwt = require('jsonwebtoken')
 const secretKey = 'dbmsc-secret';
 
 const Registration = require('./db/User'); // Import the Registration model
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 10000;
 
 app.use(express.json());
 app.use(bodyParser.json());
