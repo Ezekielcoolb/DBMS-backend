@@ -98,7 +98,7 @@ app.post('/api/register', async (req, res) => {
   try {
     const registration = new Registration(req.body);
     await registration.save();
-    res.status(201).json({ message: 'Registration successful' });
+    res.status(201).json({ message: 'Student registered successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -108,7 +108,7 @@ app.post('/api/schoolfee', async (req, res) => {
   try {
     const registration = new Schoolfee(req.body);
     await registration.save();
-    res.status(201).json({ message: 'Registration successful' });
+    res.status(201).json({ message: 'School fees updated successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -285,7 +285,7 @@ app.get('/api/getMyStudents/:class', async (req, res) => {
 
     res.status(200).json(student);
   } catch (error) {
-    console.error('Error fetching student by Id:', error);
+    console.error('Error fetching student by class:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -436,16 +436,16 @@ app.get('/api/term', async (req, res) => {
   }
 });
 
-app.put('/api/updateStudent', async (req, res) => {
+app.put('/api/updateNewSchoolFees', async (req, res) => {
   try {
     const { jssGeneral, jssThree, sssGeneral, sssThree } = req.body;
 
     // Update all documents in the collection with the provided values
     await Schoolfee.updateMany({}, { jssGeneral, jssThree, sssGeneral, sssThree });
 
-    res.status(200).json({ message: 'All data updated successfully' });
+    res.status(200).json({ message: 'School fees updated successfully' });
   } catch (error) {
-    console.error('Error updating all data:', error);
+    console.error('Error updating school fees:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -514,9 +514,9 @@ app.put('/api/updateTerm', async (req, res) => {
     // Update all documents in the collection with the provided values
     await SetTerm.updateMany({}, { session, term });
 
-    res.status(200).json({ message: 'All data updated successfully' });
+    res.status(200).json({ message: 'Term updated successfully' });
   } catch (error) {
-    console.error('Error updating all data:', error);
+    console.error('Error updating Term:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
