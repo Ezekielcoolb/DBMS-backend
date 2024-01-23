@@ -342,7 +342,7 @@ app.get('/api/departmentteachers/:department', async (req, res) => {
   try {
    
     let query = {};
-    if (department === 'Science' || department === 'Art') {
+    if (department === 'Science' || department === 'Art' || department === 'Commercial') {
       query = { $or: [{ departmentAssinged: 'Sss General' }, { departmentAssinged: department }] };
     } else {
       query = { departmentAssinged: department };
