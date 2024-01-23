@@ -1,6 +1,15 @@
 
+require('dotenv').config();
+
 const mongoose = require('mongoose');
-const dbURI = 'mongodb+srv://ezekielcoolb:dbms@cluster0.1bb6prs.mongodb.net/'; // Change this to your MongoDB URI
+
+
+
+const dbUser = process.env.DB_USER;
+const dbPass = process.env.DB_PASS;
+console.log(dbPass);
+
+const dbURI = `mongodb+srv://${dbUser}:${dbPass}@cluster0.oo9xu8g.mongodb.net/`; // Change this to your MongoDB URI
 
 mongoose.connect(dbURI, {
   useNewUrlParser: true,

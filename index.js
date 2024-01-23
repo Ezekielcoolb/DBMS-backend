@@ -19,6 +19,7 @@ app.use(cors());
 // Serve your React app (build it first)
 // app.use(express.static('client/build'));
 require('./db/config')
+require('dotenv').config();
 
 
 
