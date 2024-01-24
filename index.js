@@ -185,12 +185,7 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-app.post('/api/adminlogout', (req, res) => {
-  // Optionally, you can implement server-side logic for token invalidation or cleanup
-  
-  // Respond with success message
-  res.status(200).json({ message: 'Logout successful' });
-});
+
 
 app.get('/api/getSubjects/:className', (req, res) => {
   const className = req.params.className;
