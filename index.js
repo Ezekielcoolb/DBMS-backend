@@ -1,21 +1,30 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
+const axios = require('axios');
+const crypto = require('crypto');
 const app = express();
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const StudentAdmission = require('./db/AdmissionForm')
 const Schoolfee = require('./db/Schoolfee')
 const Teacher = require('./db/Teacher');
 const SetTerm = require('./db/SetTerm')
 const Contact = require('./db/Contact')
+const Payment = require('./db/Payment')
 const jwt = require('jsonwebtoken')
 const secretKey = 'dbmsc-secret';
 
 const Registration = require('./db/User'); // Import the Registration model
+const AdmissionForm = require('./db/AdmissionForm');
 const port = process.env.PORT || 10000;
+
+
+
 
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(cors());
+
 // Serve your React app (build it first)
 // app.use(express.static('client/build'));
 require('./db/config')
@@ -72,6 +81,165 @@ let users = [
   // Add more users as needed
 ];
 
+
+// const paystackSecretKey = 'sk_test_7aa631dccd5309b333f9996672a70d90b69c0f53';
+
+// // Generate a unique reference for the payment
+// function generateReference() {
+//   const timestamp = new Date().getTime();
+//   const randomString = Math.random().toString(36).substring(2, 10);
+//   return `PAY_${timestamp}_${randomString}`;
+// }
+
+// Define endpoint for handling payment initiation
+// app.post('/api/payments/initiate', async (req, res) => {
+//   try {
+//       const { name, email, phone, amount } = req.body;
+
+//       // Generate a reference number for the payment
+//       const reference = generateReference();
+
+//       // Call Paystack API to initialize payment
+//       const paystackResponse = await axios.post(
+//           'https://api.paystack.co/transaction/initialize',
+//           {
+//               email,
+//               amount,
+//               reference,
+//               metadata: {
+//                   name,
+//                   phone,
+//               }
+//           },
+//           {
+//               headers: {
+//                   Authorization: `Bearer ${paystackSecretKey}`,
+//               },
+//           }
+//       );
+
+//       // Extract payment initiation URL from Paystack response
+//       const paymentInitiationUrl = paystackResponse.data.data.authorization_url;
+      
+//       // Store the reference in the database
+//       const newPayment = new Payment({ reference });
+//       await newPayment.save();
+
+//       // Return the payment initiation URL and reference number to the client
+//       res.json({ paymentInitiationUrl, reference });
+//   } catch (error) {
+//       console.error('Error initiating payment:', error.response?.data || error.message);
+//       res.status(500).json({ error: 'Failed to initiate payment' });
+//   }
+// });
+
+// // Define endpoint for handling Paystack callback
+// app.post('/api/payments/callback', (req, res) => {
+//   try {
+//       const { event, data, signature } = req.body;
+
+//       // Verify Paystack callback using your secret key
+//       const isValidCallback = verifyPaystackCallback(event, data, signature);
+
+//       if (isValidCallback) {
+//           // Process the callback data (update database, send confirmation, etc.)
+//           console.log('Payment callback received:', data);
+
+//           // Respond to Paystack to acknowledge receipt of the callback
+//           res.status(200).send({ status: 'success' });
+//       } else {
+//           console.error('Invalid Paystack callback signature');
+//           res.status(400).send({ status: 'invalid_signature' });
+//       }
+//   } catch (error) {
+//       console.error('Error handling Paystack callback:', error);
+//       res.status(500).send({ status: 'error' });
+//   }
+// });
+
+// // Verify Paystack callback using your secret key
+// function verifyPaystackCallback(event, data, signature) {
+//   try {
+//       const concatenatedString = event + JSON.stringify(data);
+//       const hash = crypto
+//           .createHmac('sha512', paystackSecretKey)
+//           .update(concatenatedString)
+//           .digest('hex');
+//       return hash === signature;
+//   } catch (error) {
+//       console.error('Error verifying Paystack callback:', error);
+//       return false;
+//   }
+// }
+
+// Endpoint to handle payment success
+// app.post('/api/payments/success', async (req, res) => {
+//   try {
+//       const { reference } = req.body;
+
+//       // Find the payment in the database by reference
+//       const payment = await Payment.findOne({ reference });
+
+//       // Update payment status to 'success'
+//       payment.status = 'success';
+//       await payment.save();
+
+//       // Respond to acknowledge receipt of the success notification
+//       res.status(200).send('Payment successful');
+//   } catch (error) {
+//       console.error('Error handling payment success:', error);
+//       res.status(500).json({ error: 'Failed to handle payment success' });
+//   }
+// });
+
+// Endpoint to check payment status by reference
+// app.get('/api/payments/status/:reference', async (req, res) => {
+//   try {
+//       // Extract payment reference from request parameters
+//       const { reference } = req.params;
+
+//       // Find the payment in the database by reference
+//       const payment = await Payment.findOne({ reference });
+
+//       // Check if payment exists
+//       if (!payment) {
+//           return res.status(404).json({ error: 'Payment not found' });
+//       }
+
+//       // Respond with the payment status
+//       res.json({ status: payment.status });
+//   } catch (error) {
+//       console.error('Error checking payment status:', error);
+//       res.status(500).json({ error: 'Failed to check payment status' });
+//   }
+// });
+app.post('/api/paymentreference', async (req, res) => {
+  try {
+    const payment = new Payment(req.body);
+    await payment.save();
+    res.status(201).json({ message: 'Payment reference saved successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/confirmpayment', async (req, res) => {
+  try {
+    const { reference, transaction } = req.body;
+    const payment = await Payment.findOne({ reference, transaction });
+
+    if (payment) {
+      const token = jwt.sign({ email: payment.reference, userId: payment.id }, secretKey, { expiresIn: '1h' });
+      res.status(200).json({ message: 'Reference and transaction id confirmed',  token: token});
+    } else {
+      res.status(401).json({ message: 'Invalid reference or transaction Id' });
+    }
+  } catch (error) {
+    console.error('Error during comfirmation:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.post('/api/adminlogin', (req, res) => {
   const { email, password } = req.body;
 
@@ -92,7 +260,15 @@ app.post('/api/adminlogin', (req, res) => {
   }
 });
 
-
+app.post('/api/studentadmissionform', async (req, res) => {
+  try {
+    const student = new StudentAdmission(req.body);
+    await student.save();
+    res.status(201).json({ message: 'Form submitted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 app.post('/api/register', async (req, res) => {
   try {
@@ -400,6 +576,22 @@ app.get('/api/getContact', async (req, res) => {
   }
 });
 
+app.get('/api/getAllAdmission', async (req, res) => {
+  try {
+    
+    const admission = await AdmissionForm.find();
+
+    if (!admission) {
+      return res.status(404).json({ message: 'Admission Form not found' });
+    }
+
+    res.status(200).json(admission);
+  } catch (error) {
+    console.error('Error fetching students:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.get('/api/getStudent', async (req, res) => {
   try {
     
@@ -516,6 +708,28 @@ app.put('/api/updateTerm', async (req, res) => {
   }
 });
 
+app.put('/registration/update-amount', async (req, res) => {
+  const { admission, surname, amount } = req.body;
+
+  try {
+      // Find the document by admission and surname and update the amount field
+      const updatedRegistration = await Registration.findOneAndUpdate(
+          { admission, surname },
+          { $set: { amount } },
+          { new: true }
+      );
+
+      if (!updatedRegistration) {
+          return res.status(404).json({ error: 'student not found' });
+      }
+
+      return res.json(updatedRegistration);
+  } catch (error) {
+      console.error('Error updating amount:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.delete('/api/deleteteachers/:name', async (req, res) => {
   const name = req.params.name;
 
@@ -571,6 +785,23 @@ app.delete('/api/deletecontact/:id', async (req, res) => {
   }
 });
 
+app.delete('/api/deleteAdmissionForm/:id', async (req, res) => {
+  const admissionId = req.params.id;
+
+  try {
+    // Use the Contact model to find and remove the contact message by ID
+    const deletedAdmission = await AdmissionForm.findByIdAndRemove(admissionId);
+
+    if (deletedAdmission) {
+      res.json({ success: true, message: 'Admission Form deleted successfully' });
+    } else {
+      res.status(404).json({ success: false, message: 'Admission Form not found' });
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ success: false, message: 'Error deleting contact message' });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
