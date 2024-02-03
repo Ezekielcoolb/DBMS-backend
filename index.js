@@ -227,8 +227,8 @@ app.post('/api/paymentreference', async (req, res) => {
 
 app.post('/api/save-results', async (req, res) => {
   try {
-    const {selectedClass, results } = req.body;
-    const newResult = new JssOneResult({selectedClass, results });
+    const {term, selectedClass, results } = req.body;
+    const newResult = new JssOneResult({term, selectedClass, results });
     await newResult.save();
     res.status(201).send('Results saved successfully');
   } catch (error) {
