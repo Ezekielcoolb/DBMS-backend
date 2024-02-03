@@ -375,16 +375,16 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-app.get('/api/studentsresults/:value', async (req, res) => {
+app.get('/api/studentsresults', async (req, res) => {
   try {
   
      // Extract the value from the request parameters
-     const { value } = req.params;
+   
 
      // Find documents where the value at index 0 in the results array matches the provided value
-     const results = await JssOneResult.find({ 'results.0': value });
+     const results = await JssOneResult.find();
  
-     if (!results || results.length === 0) {
+     if (!results) {
        // If no matching documents found, send a 404 error response
        return res.status(404).json({ error: 'results not found' });
      }
