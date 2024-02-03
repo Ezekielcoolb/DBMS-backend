@@ -378,18 +378,24 @@ app.post('/api/contact', async (req, res) => {
 app.get('/api/studentsresults/:admission', async (req, res) => {
   try {
   
-    const admission = req.params.admission;
-    const results = await JssOneResult.findOne({ admission: admission });
+     // Extract the value from the request parameters
+     const { value } = req.params;
 
-    if (!results) {
-      return res.status(404).json({ message: 'result not found' });
-    }
-
-    res.status(200).json(results);
-  } catch (error) {
-    console.error('Error fetching result:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+     // Find documents where the value at index 0 in the results array matches the provided value
+     const results = await JssOneResult.find({ 'results.0': value });
+ 
+     if (!results || results.length === 0) {
+       // If no matching documents found, send a 404 error response
+       return res.status(404).json({ error: 'results not found' });
+     }
+ 
+     // Send the matching documents as response
+     res.status(200).json({ results });
+   } catch (error) {
+     // Handle errors
+     console.error('Error fetching JSS One results:', error);
+     res.status(500).json({ error: 'Failed to fetch JSS One results' });
+   }
 });
 
 app.get('/api/getSubjects/:className', (req, res) => {
