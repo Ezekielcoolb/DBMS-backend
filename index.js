@@ -225,10 +225,10 @@ app.post('/api/paymentreference', async (req, res) => {
 });
 
 
-app.post('/api/save-jssone-results', async (req, res) => {
+app.post('/api/save-results', async (req, res) => {
   try {
-    const { results } = req.body;
-    const newResult = new JssOneResult({ results });
+    const {selectedClass, results } = req.body;
+    const newResult = new JssOneResult({selectedClass, results });
     await newResult.save();
     res.status(201).send('Results saved successfully');
   } catch (error) {
@@ -375,7 +375,22 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
+app.get('/api/studentsresults/:admission', async (req, res) => {
+  try {
+  
+    const admission = req.params.admission;
+    const results = await JssOneResult.findOne({ admission: admission });
 
+    if (!results) {
+      return res.status(404).json({ message: 'result not found' });
+    }
+
+    res.status(200).json(results);
+  } catch (error) {
+    console.error('Error fetching result:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 app.get('/api/getSubjects/:className', (req, res) => {
   const className = req.params.className;
