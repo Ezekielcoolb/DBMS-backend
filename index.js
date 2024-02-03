@@ -375,7 +375,7 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-app.get('/api/studentsresults/:admission', async (req, res) => {
+app.get('/api/studentsresults/:value', async (req, res) => {
   try {
   
      // Extract the value from the request parameters
