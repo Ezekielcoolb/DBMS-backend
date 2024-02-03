@@ -2,6 +2,7 @@
 const mongoose = require('mongoose');
 
 const jssOneResultSchema = new mongoose.Schema({
+    term: String,
     selectedClass: String,
   results: [[mongoose.Schema.Types.Mixed]] // Array of arrays of mixed types
 });

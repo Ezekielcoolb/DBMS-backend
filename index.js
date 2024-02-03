@@ -375,14 +375,15 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-app.get('/api/studentsresults', async (req, res) => {
+app.get('/api/studentsresults/:term/:selectedClass', async (req, res) => {
   try {
   
      // Extract the value from the request parameters
-   
+     const term = req.params.term;
+     const selectedClass = req.params.selectedClass;
 
      // Find documents where the value at index 0 in the results array matches the provided value
-     const results = await JssOneResult.find();
+     const results = await JssOneResult.find({term: term, selectedClass: selectedClass });
  
      if (!results) {
        // If no matching documents found, send a 404 error response
