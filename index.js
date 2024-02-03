@@ -6,6 +6,7 @@ const app = express();
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const StudentAdmission = require('./db/AdmissionForm')
+const JssOneResult = require('./db/JssOne')
 const Schoolfee = require('./db/Schoolfee')
 const Teacher = require('./db/Teacher');
 const SetTerm = require('./db/SetTerm')
@@ -220,6 +221,19 @@ app.post('/api/paymentreference', async (req, res) => {
     res.status(201).json({ message: 'Payment reference saved successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+app.post('/api/save-jssone-results', async (req, res) => {
+  try {
+    const { results } = req.body;
+    const newResult = new JssOneResult({ results });
+    await newResult.save();
+    res.status(201).send('Results saved successfully');
+  } catch (error) {
+    console.error('Error saving results:', error);
+    res.status(500).send('Internal server error');
   }
 });
 
