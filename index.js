@@ -766,40 +766,39 @@ app.put('/registration/update-amount', async (req, res) => {
   }
 });
 
-app.delete('/api/deleteteachers/:name', async (req, res) => {
-  const name = req.params.name;
+app.delete('/api/deleteteachers/:id', async (req, res) => {
+  const teacherId = req.params.id;
 
   try {
-    const deletedTeacher = await Teacher.findOneAndDelete({ name: name });
+    // Use the Contact model to find and remove the contact message by ID
+    const deletedTeacher = await Contact.findByIdAndRemove(teacherId);
 
-    if (!deletedTeacher) {
-      return res.status(404).json({ success: false, message: 'Teacher not found' });
+    if (deletedTeacher) {
+      res.json({ success: true, message: 'Teacher deleted successfully' });
+    } else {
+      res.status(404).json({ success: false, message: 'Teacher not found' });
     }
-
-    res.json({ success: true, message: 'Teacher deleted successfully' });
   } catch (error) {
     console.error('Error:', error);
-    res.status(500).json({ success: false, message: 'Error deleting teacher' });
+    res.status(500).json({ success: false, message: 'Error deleting contact teacher' });
   }
 });
 
-app.delete('/api/deletestudents/:firstname/:surname', async (req, res) => {
-  const firstname = req.params.firstname;
-  const surname = req.params.surname;
-
-  
+app.delete('/api/deletestudents/:id', async (req, res) => {
+  const studentId = req.params.id;
 
   try {
-    const deletedStudent = await Registration.findOneAndDelete({ firstname: firstname, surname: surname });
+    // Use the Contact model to find and remove the contact message by ID
+    const deletedStudent = await Contact.findByIdAndRemove(studentId);
 
-    if (!deletedStudent) {
-      return res.status(404).json({ success: false, message: 'Student not found' });
+    if (deletedStudent) {
+      res.json({ success: true, message: 'Student deleted successfully' });
+    } else {
+      res.status(404).json({ success: false, message: 'Student not found' });
     }
-
-    res.json({ success: true, message: 'Student deleted successfully' });
   } catch (error) {
     console.error('Error:', error);
-    res.status(500).json({ success: false, message: 'Error deleting student' });
+    res.status(500).json({ success: false, message: 'Error deleting contact student' });
   }
 });
 // Add this route to handle DELETE requests for deleting a contact message by ID
