@@ -771,7 +771,7 @@ app.delete('/api/deleteteachers/:id', async (req, res) => {
 
   try {
     // Use the Contact model to find and remove the contact message by ID
-    const deletedTeacher = await Contact.findByIdAndRemove(teacherId);
+    const deletedTeacher = await Teacher.findByIdAndRemove(teacherId);
 
     if (deletedTeacher) {
       res.json({ success: true, message: 'Teacher deleted successfully' });
@@ -789,7 +789,7 @@ app.delete('/api/deletestudents/:id', async (req, res) => {
 
   try {
     // Use the Contact model to find and remove the contact message by ID
-    const deletedStudent = await Contact.findByIdAndRemove(studentId);
+    const deletedStudent = await Registration.findByIdAndRemove(studentId);
 
     if (deletedStudent) {
       res.json({ success: true, message: 'Student deleted successfully' });
