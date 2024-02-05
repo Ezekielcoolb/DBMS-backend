@@ -241,7 +241,7 @@ app.post('/api/save-results', async (req, res) => {
     }
 
     // Update the results field of the existing or newly created document
-    existingResults.results = newResults;
+    existingResults = {term, selectedClass, newResults};
 
     // Save the updated document to the database
     await existingResults.save();
