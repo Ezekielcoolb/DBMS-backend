@@ -227,13 +227,31 @@ app.post('/api/paymentreference', async (req, res) => {
 
 app.post('/api/save-results', async (req, res) => {
   try {
-    const {term, selectedClass, results } = req.body;
-    const newResult = new JssOneResult({term, selectedClass, results });
-    await newResult.save();
-    res.status(201).send('Results saved successfully');
+    // Extract the values from the request parameters and body
+    const term = req.params.term;
+    const selectedClass = req.params.selectedClass;
+    const newResults = req.body.results; // Assuming the results are sent in the request body
+
+    // Find the existing document that matches the provided term and selectedClass
+    let existingResults = await JssOneResult.findOne({ term: term, selectedClass: selectedClass });
+
+    // If no existing document found, create a new one
+    if (!existingResults) {
+      existingResults = new JssOneResult({ term: term, selectedClass: selectedClass });
+    }
+
+    // Update the results field of the existing or newly created document
+    existingResults.results = newResults;
+
+    // Save the updated document to the database
+    await existingResults.save();
+
+    // Send a success response
+    res.status(200).json({ message: 'Results updated successfully' });
   } catch (error) {
-    console.error('Error saving results:', error);
-    res.status(500).send('Internal server error');
+    // Handle errors
+    console.error('Error updating JSS One results:', error);
+    res.status(500).json({ error: 'Failed to update JSS One results' });
   }
 });
 
@@ -377,32 +395,26 @@ app.post('/api/contact', async (req, res) => {
 
 app.get('/api/studentsresults/:term/:selectedClass', async (req, res) => {
   try {
-    // Extract the values from the request parameters and body
-    const term = req.params.term;
-    const selectedClass = req.params.selectedClass;
-    const newResults = req.body.results; // Assuming the results are sent in the request body
+  
+     // Extract the value from the request parameters
+     const term = req.params.term;
+     const selectedClass = req.params.selectedClass;
 
-    // Find the existing document that matches the provided term and selectedClass
-    let existingResults = await JssOneResult.findOne({ term: term, selectedClass: selectedClass });
-
-    // If no existing document found, create a new one
-    if (!existingResults) {
-      existingResults = new JssOneResult({ term: term, selectedClass: selectedClass });
-    }
-
-    // Update the results field of the existing or newly created document
-    existingResults.results = newResults;
-
-    // Save the updated document to the database
-    await existingResults.save();
-
-    // Send a success response
-    res.status(200).json({ message: 'Results updated successfully' });
-  } catch (error) {
-    // Handle errors
-    console.error('Error updating JSS One results:', error);
-    res.status(500).json({ error: 'Failed to update JSS One results' });
-  }
+     // Find documents where the value at index 0 in the results array matches the provided value
+     const results = await JssOneResult.find({term: term, selectedClass: selectedClass });
+ 
+     if (!results) {
+       // If no matching documents found, send a 404 error response
+       return res.status(404).json({ error: 'results not found' });
+     }
+ 
+     // Send the matching documents as response
+     res.status(200).json({ results });
+   } catch (error) {
+     // Handle errors
+     console.error('Error fetching JSS One results:', error);
+     res.status(500).json({ error: 'Failed to fetch JSS One results' });
+   }
 });
 
 app.get('/api/getSubjects/:className', (req, res) => {
