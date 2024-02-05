@@ -227,10 +227,8 @@ app.post('/api/paymentreference', async (req, res) => {
 
 app.post('/api/save-results', async (req, res) => {
   try {
-    // Extract the values from the request parameters and body
-    const term = req.params.term;
-    const selectedClass = req.params.selectedClass;
-    const newResults = req.body.results; // Assuming the results are sent in the request body
+    // Extract the values from the request body
+    const { term, selectedClass, results } = req.body;
 
     // Find the existing document that matches the provided term and selectedClass
     let existingResults = await JssOneResult.findOne({ term: term, selectedClass: selectedClass });
@@ -241,7 +239,9 @@ app.post('/api/save-results', async (req, res) => {
     }
 
     // Update the results field of the existing or newly created document
-    existingResults = {term, selectedClass, newResults};
+    existingResults.results = results;
+    existingResults.term = term;
+    existingResults.selectedClass = selectedClass;
 
     // Save the updated document to the database
     await existingResults.save();
