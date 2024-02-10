@@ -228,10 +228,10 @@ app.post('/api/paymentreference', async (req, res) => {
 app.post('/api/save-results', async (req, res) => {
   try {
     // Extract the values from the request body
-    const { term, selectedClass, results } = req.body;
+    const {currentSession, term, selectedClass, results } = req.body;
 
     // Find the existing document that matches the provided term and selectedClass
-    let existingResults = await JssOneResult.findOne({ term: term, selectedClass: selectedClass });
+    let existingResults = await JssOneResult.findOne({currentSession: currentSession, term: term, selectedClass: selectedClass });
 
     // If no existing document found, create a new one
     if (!existingResults) {
@@ -242,6 +242,7 @@ app.post('/api/save-results', async (req, res) => {
     existingResults.results = results;
     existingResults.term = term;
     existingResults.selectedClass = selectedClass;
+    existingResults.currentSession = currentSession;
 
     // Save the updated document to the database
     await existingResults.save();
@@ -393,15 +394,16 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
-app.get('/api/studentsresults/:term/:selectedClass', async (req, res) => {
+app.get('/api/studentsresults/:currentSession/:term/:selectedClass', async (req, res) => {
   try {
   
      // Extract the value from the request parameters
+     const currentSession = req.params.currentSession;
      const term = req.params.term;
      const selectedClass = req.params.selectedClass;
 
      // Find documents where the value at index 0 in the results array matches the provided value
-     const results = await JssOneResult.find({term: term, selectedClass: selectedClass });
+     const results = await JssOneResult.find({currentSession: currentSession, term: term, selectedClass: selectedClass });
  
      if (!results) {
        // If no matching documents found, send a 404 error response
