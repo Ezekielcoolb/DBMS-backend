@@ -15,6 +15,7 @@ const registrationSchema = new mongoose.Schema({
   gender: String,
   amount: String,
   category: String,
+  lin: String,
   subjectsOffer: [String]
 });
 
