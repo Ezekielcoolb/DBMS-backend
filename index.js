@@ -83,137 +83,9 @@ let users = [
 ];
 
 
-// const paystackSecretKey = 'sk_test_7aa631dccd5309b333f9996672a70d90b69c0f53';
 
-// // Generate a unique reference for the payment
-// function generateReference() {
-//   const timestamp = new Date().getTime();
-//   const randomString = Math.random().toString(36).substring(2, 10);
-//   return `PAY_${timestamp}_${randomString}`;
-// }
 
-// Define endpoint for handling payment initiation
-// app.post('/api/payments/initiate', async (req, res) => {
-//   try {
-//       const { name, email, phone, amount } = req.body;
 
-//       // Generate a reference number for the payment
-//       const reference = generateReference();
-
-//       // Call Paystack API to initialize payment
-//       const paystackResponse = await axios.post(
-//           'https://api.paystack.co/transaction/initialize',
-//           {
-//               email,
-//               amount,
-//               reference,
-//               metadata: {
-//                   name,
-//                   phone,
-//               }
-//           },
-//           {
-//               headers: {
-//                   Authorization: `Bearer ${paystackSecretKey}`,
-//               },
-//           }
-//       );
-
-//       // Extract payment initiation URL from Paystack response
-//       const paymentInitiationUrl = paystackResponse.data.data.authorization_url;
-      
-//       // Store the reference in the database
-//       const newPayment = new Payment({ reference });
-//       await newPayment.save();
-
-//       // Return the payment initiation URL and reference number to the client
-//       res.json({ paymentInitiationUrl, reference });
-//   } catch (error) {
-//       console.error('Error initiating payment:', error.response?.data || error.message);
-//       res.status(500).json({ error: 'Failed to initiate payment' });
-//   }
-// });
-
-// // Define endpoint for handling Paystack callback
-// app.post('/api/payments/callback', (req, res) => {
-//   try {
-//       const { event, data, signature } = req.body;
-
-//       // Verify Paystack callback using your secret key
-//       const isValidCallback = verifyPaystackCallback(event, data, signature);
-
-//       if (isValidCallback) {
-//           // Process the callback data (update database, send confirmation, etc.)
-//           console.log('Payment callback received:', data);
-
-//           // Respond to Paystack to acknowledge receipt of the callback
-//           res.status(200).send({ status: 'success' });
-//       } else {
-//           console.error('Invalid Paystack callback signature');
-//           res.status(400).send({ status: 'invalid_signature' });
-//       }
-//   } catch (error) {
-//       console.error('Error handling Paystack callback:', error);
-//       res.status(500).send({ status: 'error' });
-//   }
-// });
-
-// // Verify Paystack callback using your secret key
-// function verifyPaystackCallback(event, data, signature) {
-//   try {
-//       const concatenatedString = event + JSON.stringify(data);
-//       const hash = crypto
-//           .createHmac('sha512', paystackSecretKey)
-//           .update(concatenatedString)
-//           .digest('hex');
-//       return hash === signature;
-//   } catch (error) {
-//       console.error('Error verifying Paystack callback:', error);
-//       return false;
-//   }
-// }
-
-// Endpoint to handle payment success
-// app.post('/api/payments/success', async (req, res) => {
-//   try {
-//       const { reference } = req.body;
-
-//       // Find the payment in the database by reference
-//       const payment = await Payment.findOne({ reference });
-
-//       // Update payment status to 'success'
-//       payment.status = 'success';
-//       await payment.save();
-
-//       // Respond to acknowledge receipt of the success notification
-//       res.status(200).send('Payment successful');
-//   } catch (error) {
-//       console.error('Error handling payment success:', error);
-//       res.status(500).json({ error: 'Failed to handle payment success' });
-//   }
-// });
-
-// Endpoint to check payment status by reference
-// app.get('/api/payments/status/:reference', async (req, res) => {
-//   try {
-//       // Extract payment reference from request parameters
-//       const { reference } = req.params;
-
-//       // Find the payment in the database by reference
-//       const payment = await Payment.findOne({ reference });
-
-//       // Check if payment exists
-//       if (!payment) {
-//           return res.status(404).json({ error: 'Payment not found' });
-//       }
-
-//       // Respond with the payment status
-//       res.json({ status: payment.status });
-//   } catch (error) {
-//       console.error('Error checking payment status:', error);
-//       res.status(500).json({ error: 'Failed to check payment status' });
-//   }
-// });
 app.post('/api/paymentreference', async (req, res) => {
   try {
     const payment = new Payment(req.body);
@@ -449,7 +321,7 @@ app.get('/api/student/:surname/:admission', async (req, res) => {
   }
 });
 
-app.get('/api/teachers/:name', async (req, res) => {
+app.get('/api/teacher-profile-teachers/:name', async (req, res) => {
   try {
     const name = req.params.name;
     const teacher = await Teacher.findOne({ name });
